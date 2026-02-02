@@ -4,6 +4,19 @@ import 'package:dio/dio.dart';
 void main() {
   runApp(const MyApp());
 }
+/*
+Future<void> recup()
+async {
+  final options = BaseOptions(
+    baseUrl: "https://worldcup2026.shrp.dev/docs",
+    connectTimeout: 5000,
+    receiveTimeout: 3000,
+    responseType: ResponseType.json,
+  );
+  final dio = Dio(
+      options);
+  final response = await dio.get('todos/1');
+}*/
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -90,19 +103,6 @@ class _MyHomePageState extends State<MyHomePage> {
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
             const Text('You have pushed the button this many times:'),
