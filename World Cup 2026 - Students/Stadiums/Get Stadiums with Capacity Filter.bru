@@ -1,0 +1,68 @@
+meta {
+  name: Get Stadiums with Capacity Filter
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/stadiums?minCapacity=50000&maxCapacity=80000
+  body: none
+  auth: none
+}
+
+params:query {
+  minCapacity: 50000
+  maxCapacity: 80000
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get stadiums filtered by capacity", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+  
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+    expect(res.getBody()).to.have.property('count');
+    expect(res.getBody()).to.have.property('filters');
+  
+    // Vérifier que les filtres sont correctement retournés
+    expect(res.getBody().filters).to.have.property('minCapacity', 50000);
+    expect(res.getBody().filters).to.have.property('maxCapacity', 80000);
+  
+    // Vérifier que tous les stades respectent les critères de capacité
+    res.getBody().data.forEach(stadium => {
+      expect(stadium.capacity).to.be.at.least(50000);
+      expect(stadium.capacity).to.be.at.most(80000);
+      expect(stadium).to.have.property('id');
+      expect(stadium).to.have.property('name');
+      expect(stadium).to.have.property('city');
+      expect(stadium).to.have.property('country');
+    });
+  });
+  
+  test("should validate capacity filter results", function() {
+    const stadiums = res.getBody().data;
+  
+    stadiums.forEach(stadium => {
+      expect(stadium.capacity).to.be.a('number');
+      expect(stadium.capacity).to.be.above(49999);
+      expect(stadium.capacity).to.be.less(80001);
+    });
+  
+    // Vérifier que les résultats sont triés par nom alphabétique
+    if (stadiums.length > 1) {
+      for (let i = 1; i < stadiums.length; i++) {
+        expect(stadiums[i-1].name.toLowerCase()).to.be.at.most(stadiums[i].name.toLowerCase());
+      }
+    }
+  });
+  
+  test("should have consistent response structure", function() {
+    const body = res.getBody();
+    expect(body.count).to.equal(body.data.length);
+  });
+}

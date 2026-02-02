@@ -1,0 +1,55 @@
+meta {
+  name: Get Stadium Matches
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/stadiums/1/matches
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get matches for stadium", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+  
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+  
+    // Vérifier que tous les matchs sont bien associés au stade
+    res.getBody().data.forEach(match => {
+      expect(match).to.have.property('id');
+      expect(match).to.have.property('stadiumId');
+      expect(match.stadiumId).to.equal(1);
+      expect(match).to.have.property('homeTeamId');
+      expect(match).to.have.property('awayTeamId');
+      expect(match).to.have.property('date');
+      expect(match).to.have.property('status');
+      expect(match).to.have.property('stage');
+    });
+  });
+  
+  test("should validate match data structure", function() {
+    const matches = res.getBody().data;
+  
+    matches.forEach(match => {
+      expect(match.id).to.be.a('number');
+      expect(match.stadiumId).to.be.a('number');
+      expect(match.homeTeamId).to.be.a('number');
+      expect(match.awayTeamId).to.be.a('number');
+      expect(match.date).to.be.a('string');
+      expect(['scheduled', 'live', 'finished', 'cancelled']).to.include(match.status);
+      expect(['group', 'round_of_32', 'round_of_16', 'quarter_finals', 'semi_finals', 'third_place', 'final']).to.include(match.stage);
+  
+      // Vérifier que la date est au bon format
+      expect(new Date(match.date)).to.be.instanceOf(Date);
+      expect(new Date(match.date).toString()).to.not.equal('Invalid Date');
+    });
+  });
+}

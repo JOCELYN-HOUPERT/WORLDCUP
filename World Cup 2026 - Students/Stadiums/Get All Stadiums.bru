@@ -1,0 +1,45 @@
+meta {
+  name: Get All Stadiums
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/stadiums
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get all stadiums", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+  
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+    expect(res.getBody()).to.have.property('count');
+    expect(res.getBody()).to.have.property('timestamp');
+  
+    // Vérifier que count correspond à la taille du tableau
+    expect(res.getBody().count).to.equal(res.getBody().data.length);
+  
+    if (res.getBody().data.length > 0) {
+      const stadium = res.getBody().data[0];
+      expect(stadium).to.have.property('id');
+      expect(stadium).to.have.property('name');
+      expect(stadium).to.have.property('city');
+      expect(stadium).to.have.property('country');
+      expect(stadium).to.have.property('capacity');
+      expect(stadium).to.have.property('timezone');
+      expect(stadium).to.have.property('features');
+      expect(stadium.capacity).to.be.a('number');
+      expect(['USA', 'CANADA', 'MEXICO']).to.include(stadium.country);
+    }
+  });
+  
+  
+}

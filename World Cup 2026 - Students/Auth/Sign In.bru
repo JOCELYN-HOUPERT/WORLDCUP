@@ -1,0 +1,44 @@
+meta {
+  name: Sign In
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/signin
+  body: json
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "email": "john@doe.com",
+    "password": "azerty"
+  }
+}
+
+vars:pre-request {
+  apiKey: wct_058e5f3312aba081ad3efdee5d97896d13d594eff83fd57a3952f2365037dca0
+}
+
+vars:post-response {
+  access_token: res.body.data.access_token
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("access_token", res.getBody().data.access_token);
+  }
+}
+
+tests {
+  test("should login successfully", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success', true);
+    expect(res.getBody().data).to.have.property('access_token');
+  });
+}

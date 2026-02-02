@@ -1,0 +1,28 @@
+meta {
+  name: Get All Groups
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/groups
+  body: none
+  auth: none
+}
+
+params:query {
+  ~name: A
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get all groups", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+  });
+}

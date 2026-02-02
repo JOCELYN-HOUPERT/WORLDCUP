@@ -1,0 +1,37 @@
+meta {
+  name: Error Cases - Invalid Capacity
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/stadiums?minCapacity=invalid
+  body: none
+  auth: none
+}
+
+params:query {
+  minCapacity: invalid
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should handle invalid capacity parameter", function() {
+    expect(res.getStatus()).to.equal(400);
+    expect(res.getBody()).to.have.property('success',false);
+  
+    expect(res.getBody()).to.have.property('message');
+    expect(res.getBody().message).to.be.a('string');
+    expect(res.getBody().message).to.include('minCapacity must be a positive number');
+  });
+  
+  test("should have proper error response structure", function() {
+    const body = res.getBody();
+    expect(res.getBody()).to.have.property('success',false);
+  
+    expect(body).to.have.property('message');
+  });
+}

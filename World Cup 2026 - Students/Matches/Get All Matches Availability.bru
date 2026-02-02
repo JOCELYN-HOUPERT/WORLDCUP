@@ -1,0 +1,216 @@
+meta {
+  name: Get All Matches Availability
+  type: http
+  seq: 25
+}
+
+get {
+  url: {{baseUrl}}/matches/availability
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get availability for all matches", function() {
+    const status = res.getStatus();
+  
+    expect(status).to.equal(200);
+  
+    const data = res.getBody();
+    expect(Array.isArray(data)).to.be.true;
+    expect(data.length).to.be.above(0);
+  
+    // Vérifier le premier match pour s'assurer de la structure
+    const firstMatch = data[0];
+  
+    // Vérifier les informations générales du match
+    expect(firstMatch).to.have.property('id');
+    expect(firstMatch).to.have.property('homeTeam');
+    expect(firstMatch).to.have.property('awayTeam');
+    expect(firstMatch).to.have.property('stadium');
+    expect(firstMatch).to.have.property('date');
+    expect(firstMatch).to.have.property('status');
+    expect(firstMatch).to.have.property('stage');
+    expect(firstMatch).to.have.property('priceMultiplier');
+    expect(firstMatch).to.have.property('availableSeats');
+    expect(firstMatch).to.have.property('categories');
+  
+    expect(typeof firstMatch.id).to.equal('number');
+    expect(typeof firstMatch.availableSeats).to.equal('number');
+    expect(firstMatch.availableSeats).to.be.at.least(0);
+  
+    // Vérifier que homeTeam et awayTeam sont des objets complets
+    expect(typeof firstMatch.homeTeam).to.equal('object');
+    expect(firstMatch.homeTeam).to.have.property('id');
+    expect(firstMatch.homeTeam).to.have.property('name');
+    expect(firstMatch.homeTeam).to.have.property('code');
+    expect(firstMatch.homeTeam).to.have.property('flag');
+  
+    expect(typeof firstMatch.awayTeam).to.equal('object');
+    expect(firstMatch.awayTeam).to.have.property('id');
+    expect(firstMatch.awayTeam).to.have.property('name');
+    expect(firstMatch.awayTeam).to.have.property('code');
+    expect(firstMatch.awayTeam).to.have.property('flag');
+  
+    // Vérifier que stadium est un objet complet
+    expect(typeof firstMatch.stadium).to.equal('object');
+    expect(firstMatch.stadium).to.have.property('id');
+    expect(firstMatch.stadium).to.have.property('name');
+    expect(firstMatch.stadium).to.have.property('city');
+    expect(firstMatch.stadium).to.have.property('country');
+  
+    // Vérifier les catégories
+    const categories = firstMatch.categories;
+    const expectedCategories = ['VIP', 'CATEGORY_1', 'CATEGORY_2', 'CATEGORY_3'];
+  
+    expectedCategories.forEach(category => {
+      expect(categories).to.have.property(category);
+      const cat = categories[category];
+  
+      // Vérifier la structure de chaque catégorie
+      expect(cat).to.have.property('available');
+      expect(cat).to.have.property('totalSeats');
+      expect(cat).to.have.property('availableSeats');
+      expect(cat).to.have.property('soldSeats');
+      expect(cat).to.have.property('price');
+  
+      // Vérifier les types
+      expect(typeof cat.available).to.equal('boolean');
+      expect(typeof cat.totalSeats).to.equal('number');
+      expect(typeof cat.availableSeats).to.equal('number');
+      expect(typeof cat.soldSeats).to.equal('number');
+      expect(typeof cat.price).to.equal('number');
+  
+      // Vérifier la cohérence
+      expect(cat.availableSeats + cat.soldSeats).to.equal(cat.totalSeats);
+      expect(cat.availableSeats).to.be.at.least(0);
+      expect(cat.soldSeats).to.be.at.least(0);
+      expect(cat.price).to.be.above(0);
+    });
+  
+    // Afficher un résumé
+    console.log(`\n=== Disponibilité pour ${data.length} matchs ===`);
+  
+    // Afficher les 3 premiers matchs
+    data.slice(0, 3).forEach((match, index) => {
+      console.log(`\n${index + 1}. ${match.homeTeam.name} ${match.homeTeam.flag} vs ${match.awayTeam.flag} ${match.awayTeam.name}`);
+      console.log(`   Stade: ${match.stadium.name} (${match.stadium.city}, ${match.stadium.country})`);
+      console.log(`   Date: ${new Date(match.date).toLocaleString('fr-FR')}`);
+      console.log(`   Status: ${match.status} | Stage: ${match.stage}`);
+      console.log(`   Capacité: ${match.availableSeats} places`);
+  
+      let totalAvailable = 0;
+      expectedCategories.forEach(category => {
+        const cat = match.categories[category];
+        totalAvailable += cat.availableSeats;
+        console.log(`   ${category}: ${cat.availableSeats}/${cat.totalSeats} disponibles - ${cat.price}€`);
+      });
+      console.log(`   Total disponible: ${totalAvailable} places`);
+    });
+  
+    if (data.length > 3) {
+      console.log(`\n... et ${data.length - 3} autres matchs`);
+    }
+  });
+}
+
+docs {
+  # Get All Matches Availability
+  
+  Récupère la disponibilité détaillée de tous les matchs en une seule requête optimisée.
+  
+  ## Avantages de cette route
+  
+  - **Performance** : Une seule requête au lieu de N+1 (1 pour les matchs + 1 par match)
+  - **Efficacité** : Utilise seulement 2 requêtes SQL optimisées
+  - **Vue d'ensemble** : Combine les informations de `/matches` et `/matches/{id}/availability`
+  
+  ## Informations retournées
+  
+  Pour chaque match :
+  - **Informations complètes du match** : id, status, stage, priceMultiplier, date, availableSeats
+  - **Équipes complètes** : objets homeTeam et awayTeam avec id, name, code, flag, confederation, continent
+  - **Stade complet** : objet stadium avec id, name, city, country, capacity, timezone
+  - **Disponibilité par catégorie** (VIP, CATEGORY_1, CATEGORY_2, CATEGORY_3) :
+    - `available` : Booléen indiquant si des places sont disponibles
+    - `totalSeats` : Capacité totale de la catégorie (25% du stade)
+    - `availableSeats` : Places restantes
+    - `soldSeats` : Places vendues ou réservées
+    - `price` : Prix du ticket pour cette catégorie
+  
+  ## Cas d'usage
+  
+  Idéal pour :
+  - Afficher une liste de matchs avec disponibilité en temps réel
+  - Page d'accueil de billetterie avec drapeaux et infos complètes
+  - Calendrier des matchs avec indicateur de disponibilité
+  - Dashboard d'administration
+  - Applications mobiles nécessitant toutes les données en une requête
+  
+  ## Exemple de réponse
+  
+  ```json
+  [
+    {
+      "id": 1,
+      "homeTeam": {
+        "id": 1,
+        "name": "France",
+        "code": "FRA",
+        "flag": "🇫🇷",
+        "confederation": "UEFA",
+        "continent": "Europe"
+      },
+      "awayTeam": {
+        "id": 2,
+        "name": "Germany",
+        "code": "GER",
+        "flag": "🇩🇪",
+        "confederation": "UEFA",
+        "continent": "Europe"
+      },
+      "stadium": {
+        "id": 1,
+        "name": "MetLife Stadium",
+        "city": "East Rutherford",
+        "country": "United States",
+        "countryCode": "US",
+        "capacity": 82500,
+        "timezone": "America/New_York"
+      },
+      "date": "2026-06-11T18:00:00.000Z",
+      "status": "upcoming",
+      "stage": "group_stage",
+      "priceMultiplier": 1.0,
+      "availableSeats": 3600,
+      "categories": {
+        "VIP": {
+          "available": true,
+          "totalSeats": 900,
+          "availableSeats": 850,
+          "soldSeats": 50,
+          "price": 320.00
+        },
+        "CATEGORY_1": { ... },
+        "CATEGORY_2": { ... },
+        "CATEGORY_3": { ... }
+      }
+    }
+  ]
+  ```
+  
+  ## Performance
+  
+  Cette route est optimisée pour minimiser le nombre de requêtes SQL :
+  - 1 requête pour récupérer tous les matchs
+  - 1 requête pour récupérer tous les tickets groupés par match et catégorie
+  - Calcul en mémoire de la disponibilité pour chaque match
+  
+  Au lieu de faire 1 + N requêtes (où N = nombre de matchs), cette approche
+  fait seulement 2 requêtes, ce qui est beaucoup plus performant pour les
+  grandes listes de matchs.
+}

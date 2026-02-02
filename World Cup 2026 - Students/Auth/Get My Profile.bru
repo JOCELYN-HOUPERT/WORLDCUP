@@ -1,0 +1,28 @@
+meta {
+  name: Get My Profile
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/auth/me
+  body: none
+  auth: bearer
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+auth:bearer {
+  token: {{access_token}}
+}
+
+tests {
+  test("should get user profile", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success', true);
+    expect(res.getBody().data).to.have.property('id');
+    expect(res.getBody().data).to.have.property('email');
+  });
+}

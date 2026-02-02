@@ -1,0 +1,60 @@
+meta {
+  name: Get Stadium by ID
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/stadiums/1
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get stadium by ID", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+  
+    expect(res.getBody()).to.have.property('data');
+  
+    const stadium = res.getBody().data;
+    expect(stadium).to.have.property('id');
+    expect(stadium).to.have.property('name');
+    expect(stadium).to.have.property('city');
+    expect(stadium).to.have.property('country');
+    expect(stadium).to.have.property('countryCode');
+    expect(stadium).to.have.property('capacity');
+    expect(stadium).to.have.property('timezone');
+    expect(stadium).to.have.property('features');
+  
+    expect(stadium.id).to.be.a('number');
+    expect(stadium.name).to.be.a('string');
+    expect(stadium.city).to.be.a('string');
+    expect(['USA', 'CANADA', 'MEXICO']).to.include(stadium.country);
+    expect(stadium.countryCode).to.have.lengthOf(2);
+    expect(stadium.capacity).to.be.a('number');
+    expect(stadium.capacity).to.be.above(0);
+    expect(stadium.timezone).to.be.a('string');
+    expect(stadium.features).to.be.an('array');
+  });
+  
+  test("should have valid stadium properties", function() {
+    const stadium = res.getBody().data;
+  
+    // Vérifier que la capacité est réaliste pour un stade
+    expect(stadium.capacity).to.be.at.least(10000);
+    expect(stadium.capacity).to.be.at.most(100000);
+  
+    // Vérifier que le timezone est au bon format
+    //expect(stadium.timezone).to.match(/^[A-Za-z_\/]+$/);
+  
+    // Vérifier que les features sont des chaînes
+    stadium.features.forEach(feature => {
+      expect(feature).to.be.a('string');
+    });
+  });
+}

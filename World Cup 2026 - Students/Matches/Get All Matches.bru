@@ -1,0 +1,28 @@
+meta {
+  name: Get All Matches
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/matches
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+vars:post-response {
+  matchId: res.body.data[0].id
+}
+
+tests {
+  test("should get all matches", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+  });
+}

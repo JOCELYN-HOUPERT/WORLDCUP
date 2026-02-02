@@ -1,0 +1,79 @@
+meta {
+  name: Sign Up
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/signup
+  body: json
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+body:json {
+  {
+    "firstname": "John",
+    "lastname": "Doe",
+    "email": "john@doe.com",
+    "password": "azerty",
+    "birthDate": "1980-07-07"
+  }
+}
+
+vars:pre-request {
+  : 
+}
+
+vars:post-response {
+  apiKey: res.body.data.apiKey.key
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setEnvVar("access_token", res.getBody().data.access_token);
+  
+    // Capture auto-generated API key
+    if (res.getBody().data.apiKey) {
+      bru.setEnvVar("default_api_key", res.getBody().data.apiKey.key);
+      console.log("Auto-generated API key captured");
+    }
+  }
+}
+
+tests {
+  test("should register successfully", function() {
+    expect(res.getStatus()).to.equal(201);
+    expect(res.getBody()).to.have.property('success',true);
+  
+    expect(res.getBody().data).to.have.property('access_token');
+  });
+  
+  test("should auto-generate an API key", function() {
+    expect(res.getStatus()).to.equal(201);
+  
+    const data = res.getBody().data;
+    expect(data).to.have.property('apiKey');
+  
+    const apiKey = data.apiKey;
+    expect(apiKey).to.have.property('key');
+    expect(apiKey).to.have.property('name');
+    expect(apiKey).to.have.property('warning');
+  
+    // Verify key format
+    expect(apiKey.key).to.match(/^wct_[a-f0-9]{64}$/);
+  
+    // Verify name includes user's name
+    expect(apiKey.name).to.include('John Doe');
+    expect(apiKey.name).to.include('Default Key');
+  
+    // Verify warning is present
+    expect(apiKey.warning).to.include('Sauvegardez');
+  
+    console.log('API Key:', apiKey.key);
+    console.log('Name:', apiKey.name);
+  });
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Get Group by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/groups/:groupID
+  body: none
+  auth: none
+}
+
+params:path {
+  groupID: 1
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get group by ID", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.have.property('id');
+  });
+}

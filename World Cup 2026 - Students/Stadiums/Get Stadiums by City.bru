@@ -1,0 +1,50 @@
+meta {
+  name: Get Stadiums by City
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/stadiums?city=Los Angeles
+  body: none
+  auth: none
+}
+
+params:query {
+  city: Los Angeles
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get stadiums by city", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+  
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+  
+    // Tous les stades retournés doivent être de Los Angeles
+    res.getBody().data.forEach(stadium => {
+      expect(stadium.city).to.equal('Los Angeles');
+      expect(stadium).to.have.property('id');
+      expect(stadium).to.have.property('name');
+      expect(stadium).to.have.property('country');
+      expect(stadium).to.have.property('capacity');
+    });
+  });
+  
+  test("should validate city stadiums data", function() {
+    const stadiums = res.getBody().data;
+  
+    stadiums.forEach(stadium => {
+      expect(stadium.city).to.be.a('string');
+      expect(stadium.name).to.be.a('string');
+      expect(stadium.capacity).to.be.a('number');
+      expect(stadium.timezone).to.be.a('string');
+      expect(stadium.features).to.be.an('array');
+    });
+  });
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Get Teams by Group
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/teams/group/:groupId
+  body: none
+  auth: none
+}
+
+params:path {
+  groupId: 1
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get teams by group", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+  });
+}

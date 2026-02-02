@@ -1,0 +1,28 @@
+meta {
+  name: Get Team by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/teams/:teamId
+  body: none
+  auth: none
+}
+
+params:path {
+  teamId: 1
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get team by ID", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.have.property('id');
+  });
+}

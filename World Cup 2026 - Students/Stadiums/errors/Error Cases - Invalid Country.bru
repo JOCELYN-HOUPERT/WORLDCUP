@@ -1,0 +1,39 @@
+meta {
+  name: Error Cases - Invalid Country
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/stadiums?country=INVALID
+  body: none
+  auth: none
+}
+
+params:query {
+  country: INVALID
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should handle invalid country gracefully", function() {
+    // L'API retourne maintenant 400 (Bad Request) pour un pays invalide
+    const status = res.getStatus();
+    expect(status).to.equal(400);
+  
+    expect(res.getBody()).to.have.property('success',false);
+  
+    expect(res.getBody()).to.have.property('message');
+    expect(res.getBody().message).to.be.a('string');
+    expect(res.getBody().message).to.include('Invalid country');
+    expect(res.getBody().message).to.include('USA, CANADA, MEXICO');
+  });
+  
+  test("should have proper response structure for invalid country", function() {
+    const body = res.getBody();
+    expect(body).to.have.property('success');
+  });
+}

@@ -1,0 +1,68 @@
+meta {
+  name: Get Stadiums with Combined Filters
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/stadiums?country=USA&minCapacity=75000
+  body: none
+  auth: none
+}
+
+params:query {
+  country: USA
+  minCapacity: 75000
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get stadiums with combined filters", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+    expect(res.getBody()).to.have.property('count');
+    expect(res.getBody()).to.have.property('filters');
+  
+    // Vérifier que les filtres sont correctement appliqués
+    expect(res.getBody().filters).to.have.property('country', 'USA');
+    expect(res.getBody().filters).to.have.property('minCapacity', 75000);
+  
+    // Tous les stades retournés doivent respecter les critères
+    res.getBody().data.forEach(stadium => {
+      expect(stadium.country).to.equal('USA');
+      expect(stadium.capacity).to.be.at.least(75000);
+      expect(stadium).to.have.property('id');
+      expect(stadium).to.have.property('name');
+      expect(stadium).to.have.property('city');
+    });
+  });
+  
+  test("should validate combined filter results", function() {
+    const stadiums = res.getBody().data;
+    const filters = res.getBody().filters;
+  
+    // Vérifier que le count correspond à la taille du tableau
+    expect(res.getBody().count).to.equal(stadiums.length);
+  
+    // Vérifier que tous les stades respectent les critères combinés
+    stadiums.forEach(stadium => {
+      expect(stadium.country).to.equal(filters.country);
+      expect(stadium.capacity).to.be.at.least(filters.minCapacity);
+      expect(stadium.capacity).to.be.a('number');
+      expect(stadium.name).to.be.a('string');
+      expect(stadium.city).to.be.a('string');
+    });
+  
+    // Vérifier que les résultats sont triés par nom (alphabétique)
+    if (stadiums.length > 1) {
+      for (let i = 1; i < stadiums.length; i++) {
+        expect(stadiums[i-1].name.toLowerCase()).to.be.at.most(stadiums[i].name.toLowerCase());
+      }
+    }
+  });
+}

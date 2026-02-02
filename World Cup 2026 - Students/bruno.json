@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "name": "World Cup 2026 - Students",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ],
+  "size": 0.049701690673828125,
+  "filesCount": 51
+}

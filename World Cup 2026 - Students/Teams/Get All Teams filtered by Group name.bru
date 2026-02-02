@@ -1,0 +1,28 @@
+meta {
+  name: Get All Teams filtered by Group name
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/teams?group=A
+  body: none
+  auth: none
+}
+
+params:query {
+  group: A
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get all teams", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+    expect(res.getBody()).to.have.property('data');
+    expect(res.getBody().data).to.be.an('array');
+  });
+}

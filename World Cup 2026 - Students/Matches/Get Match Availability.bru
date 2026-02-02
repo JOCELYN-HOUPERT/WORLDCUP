@@ -1,0 +1,127 @@
+meta {
+  name: Get Match Availability
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/matches/:id/availability
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{matchId}}
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should get match availability with category breakdown", function() {
+    const status = res.getStatus();
+  
+    expect(status).to.equal(200);
+    expect(res.getBody()).to.have.property('success',true);
+  
+    expect(res.getBody()).to.have.property('data');
+  
+    const data = res.getBody().data;
+  
+    // Vérifier les informations générales du match
+    expect(data).to.have.property('matchId');
+    expect(data).to.have.property('homeTeam');
+    expect(data).to.have.property('awayTeam');
+    expect(data).to.have.property('stadium');
+    expect(data).to.have.property('matchDate');
+    expect(data).to.have.property('totalAvailableSeats');
+    expect(data).to.have.property('categories');
+  
+    expect(typeof data.totalAvailableSeats).to.equal('number');
+    expect(data.totalAvailableSeats).to.be.at.least(0);
+  
+    // Vérifier les catégories
+    const categories = data.categories;
+    const expectedCategories = ['VIP', 'CATEGORY_1', 'CATEGORY_2', 'CATEGORY_3'];
+  
+    expectedCategories.forEach(category => {
+      expect(categories).to.have.property(category);
+      const cat = categories[category];
+  
+      // Vérifier la structure de chaque catégorie
+      expect(cat).to.have.property('available');
+      expect(cat).to.have.property('totalSeats');
+      expect(cat).to.have.property('availableSeats');
+      expect(cat).to.have.property('soldSeats');
+      expect(cat).to.have.property('price');
+  
+      // Vérifier les types
+      expect(typeof cat.available).to.equal('boolean');
+      expect(typeof cat.totalSeats).to.equal('number');
+      expect(typeof cat.availableSeats).to.equal('number');
+      expect(typeof cat.soldSeats).to.equal('number');
+      expect(typeof cat.price).to.equal('number');
+  
+      // Vérifier la cohérence
+      expect(cat.availableSeats + cat.soldSeats).to.equal(cat.totalSeats);
+      expect(cat.availableSeats).to.be.at.least(0);
+      expect(cat.soldSeats).to.be.at.least(0);
+      expect(cat.price).to.be.above(0);
+  
+      console.log(`${category}: ${cat.availableSeats}/${cat.totalSeats} places disponibles (${cat.soldSeats} vendues) - ${cat.price}€`);
+    });
+  
+    // Afficher le résumé
+    console.log('\n=== Résumé de disponibilité ===');
+    console.log(`Match: ${data.homeTeam} vs ${data.awayTeam}`);
+    console.log(`Stade: ${data.stadium}`);
+    console.log(`Date: ${data.matchDate}`);
+    console.log(`Capacité totale: ${data.totalAvailableSeats} places`);
+    console.log('\nPar catégorie:');
+    expectedCategories.forEach(category => {
+      const cat = categories[category];
+      console.log(`  ${category}: ${cat.availableSeats}/${cat.totalSeats} disponibles - ${cat.price}€`);
+    });
+  });
+}
+
+docs {
+  # Get Match Availability
+  
+  Récupère la disponibilité détaillée d'un match avec le nombre de places par catégorie et les tarifs.
+  
+  ## Informations retournées
+  
+  Pour chaque catégorie (VIP, CATEGORY_1, CATEGORY_2, CATEGORY_3) :
+  - `available` : Booléen indiquant si des places sont disponibles
+  - `totalSeats` : Capacité totale de la catégorie (25% du stade)
+  - `availableSeats` : Places restantes
+  - `soldSeats` : Places vendues ou réservées
+  - `price` : Prix du ticket pour cette catégorie
+  
+  ## Calcul des places
+  
+  - La capacité est répartie équitablement (25% par catégorie)
+  - Le système compte les tickets PENDING_PAYMENT, CONFIRMED et USED
+  - Les prix varient selon la catégorie et le multiplicateur du match
+  
+  ## Exemple de réponse
+  
+  ```json
+  {
+    "categories": {
+      "VIP": {
+        "available": true,
+        "totalSeats": 900,
+        "availableSeats": 850,
+        "soldSeats": 50,
+        "price": 320.00
+      },
+      "CATEGORY_1": { ... },
+      "CATEGORY_2": { ... },
+      "CATEGORY_3": { ... }
+    }
+  }
+  ```
+}

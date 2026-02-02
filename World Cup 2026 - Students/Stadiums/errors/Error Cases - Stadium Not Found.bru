@@ -1,0 +1,39 @@
+meta {
+  name: Error Cases - Stadium Not Found
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/stadiums/999999
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should return 404 for non-existent stadium", function() {
+    expect(res.getStatus()).to.equal(404);
+    expect(res.getBody()).to.have.property('success',false);
+    expect(res.getBody()).to.have.property('message');
+    expect(res.getBody().message).to.be.a('string');
+    expect(res.getBody().message.toLowerCase()).to.include('not found');
+  });
+  
+  test("should have proper error response structure", function() {
+    const body = res.getBody();
+    expect(body).to.have.property('success');
+    expect(body).to.have.property('message');
+  
+    expect(body.success).to.equal(false);
+    expect(body.message).to.be.a('string');
+    expect(body.timestamp).to.be.a('string');
+  
+    // Vérifier que le timestamp est une date valide
+    expect(new Date(body.timestamp)).to.be.instanceOf(Date);
+    expect(new Date(body.timestamp).toString()).to.not.equal('Invalid Date');
+  });
+}
